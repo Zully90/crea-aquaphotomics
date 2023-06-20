@@ -1,21 +1,26 @@
 import streamlit as st
+from scipy import stats
 import numpy as np
 import pandas as pd
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
+
+# Sklearn
 from sklearn.pipeline import Pipeline
 from sklearn.neighbors import LocalOutlierFactor
 
+# Custom helpers
 from helpers.src.pca import PCA
+from helpers.src.preprocessing import msc_processing, derivate_processing, norm_preprocessing
 
+# Plotly
 import plotly.express as px
 import plotly.graph_objects as go
 
 import warnings
 warnings.filterwarnings("ignore")
 
-from helpers.src.preprocessing import msc_processing, derivate_processing, norm_preprocessing
 
-from scipy import stats
+### ---- CORE ---- #
 
 # Titolo
 st.title('Aquaphotomics')
@@ -33,11 +38,22 @@ st.header("Dati Grezzi")
 st.dataframe(raw)
 
 ### ---- SIDEBAR ---- ###
+
+# Outlier detection
+st.sidebar.header('Outlier check')
+enable_outlier_detection = st.sidebar.checkbox("Enable Outlier Detection")
+
+# Preprocessing
 st.sidebar.header('Pipeline Steps')
 use_smoothing = st.sidebar.checkbox('Activate Smoothing')
 use_II_derivative = st.sidebar.checkbox('Activate Second Derivative')
 use_msc = st.sidebar.checkbox('Activate MSC')
 use_normalization = st.sidebar.checkbox('Use Normalization')
+
+# Loadings Plot
+st.sidebar.header('Loadings Plot')
+
+### ---- END SIDEBAR ---- ####
 
 # Define the pipeline steps based on user selections
 pipeline_steps = []
@@ -56,8 +72,8 @@ pipeline = Pipeline(pipeline_steps)
 
 spectra = raw.loc[:, 908.1:1676.2].set_index(raw.ID)
 
-### ---- OUTLIERS ---- ###
 
+### ---- OUTLIERS ---- ###
 
 def lof_outlier_detection(data, contamination=0.1):
     lof = LocalOutlierFactor(contamination=contamination)
@@ -65,26 +81,18 @@ def lof_outlier_detection(data, contamination=0.1):
     outliers = data[labels == -1]
     return outliers
 
-# Sidebar checkbox to activate outlier detection
-st.sidebar.header('Outlier check')
-enable_outlier_detection = st.sidebar.checkbox("Enable Outlier Detection")
-
 if enable_outlier_detection:
     st.subheader("Outlier Detection Activated")
 
     # Perform outlier detection
     outliers = lof_outlier_detection(spectra)
-
-    # Display the outliers
-    # st.write("Outliers:")
-    # st.write(outliers.index)
+    out_index = outliers.index
+    # Drop
+    spectra.drop(out_index, inplace=True)
+    raw = raw[~raw['ID'].isin(out_index) == True]
 else:
     st.write("Outlier detection is disabled.")
     
-out_index = outliers.index
-spectra.drop(out_index, inplace=True)
-raw = raw[~raw['Timestamp'].isin(out_index)]
-
 
 ### ----- SPECTRA PLOTS ----- ###
 
@@ -100,7 +108,6 @@ if pipeline_steps != []:
     fig2 = px.line(spectra_prepro_water_t, x='index', y=spectra_prepro_water_t.columns[1:])
     
     # Loadings plot
-    st.sidebar.header('Loadings Plot')
     modello = PCA(values=spectra_prepro.values, components=5)
     loadings = pd.DataFrame(modello.loadings, index=spectra_prepro.columns, columns=[f"comp_{i+1}" for i in range(modello.components)])
     selected_columns = st.sidebar.multiselect('Select the loading you whish to see', loadings.columns)
@@ -116,7 +123,6 @@ else:
     fig2 = px.line(spectra_t_water, x='index', y=spectra_t_water.columns[1:])
     
     # Loadings plot
-    st.sidebar.header('Loadings Plot')
     modello = PCA(values=spectra.values, components=5)
     loadings = pd.DataFrame(modello.loadings, index=spectra.columns, columns=[f"comp_{i+1}" for i in range(modello.components)])
     selected_columns = st.sidebar.multiselect('Select the loading you whish to see', loadings.columns)
@@ -226,12 +232,3 @@ aquagramma = go.Figure(data=traces, layout=layout)
 
 # Show the plot
 st.plotly_chart(aquagramma, theme=None, use_container_width=False,)
-
-
-
-# Inserire piccolo controllo outliers (checkbox)
-# Inserire Sfondo (?)
-# Plot Spettro intero - Mancano Nomi sugli assi e dei campioni - DONE
-# Plot banda 1300-1600 - DONE
-# SpiderPlot delle 12 WL - DONE
-# Plot PCA con scelta di quale componente mettere su assi (sia scatter che loadings spectra-like) - DONE
