@@ -1,7 +1,7 @@
-FROM python:3.8.5
+FROM python
 
 COPY . .
 
 RUN pip install -r requirements.txt
 
-CMD ["streamlit", "run", "/app/Homepage.py"]
+CMD ["streamlit", "run", "/app/Homepage.py", "--server.port 8080"]
