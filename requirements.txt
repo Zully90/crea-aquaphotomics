@@ -1,0 +1,16 @@
+beautifulsoup4
+pandas
+streamlit
+watchdog
+streamlit-authenticator
+plotly
+seaborn
+matplotlib
+jupyterlab
+scipy
+numpy
+scikit-learn
+pandocfilters
+pydrive
+df2gspread
+streamlit-aggrid
