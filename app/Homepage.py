@@ -27,7 +27,7 @@ st.title('Aquaphotomics')
 st.text("Pagina di esempio per visualizzare i dati di uno studio di Aquaphotomics")
 
 # Data import
-raw = pd.read_excel("./data.xlsx")
+raw = pd.read_excel("./app/data.xlsx")
 
 raw.rename(
     columns={raw.columns[0]: "ID", raw.columns[1]: "Timestamp"},

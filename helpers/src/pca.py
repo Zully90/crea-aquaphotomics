@@ -52,7 +52,7 @@ class PCA:
         """Crea il modello della PCA."""
         # Modello
         self.model = smPCA(
-            self.values, standardize=False, method="nipals", demean=False, normalize=False
+            self.values, standardize=True, method="nipals", demean=True, normalize=True
         )
 
         # Calcola la varianza spiegata
